@@ -6,6 +6,7 @@ const connectStatus = ref(false);
 const displayKeyStatus = ref(false);
 
 const accounts = reactive([]);
+const totpSeed = ref(0);
 
 /* Computed */
 const connectStatusString = computed(() =>
@@ -14,25 +15,6 @@ const connectStatusString = computed(() =>
 const connectCmdString = computed(() =>
   connectStatus.value ? "Disconnect" : "Connect"
 );
-const keyDisplayString = computed(() => {
-  if (!displayKeyStatus) {
-    return;
-  }
-});
-
-onMounted(() => {
-  console.log("Starting Application");
-
-  for (let _ = 0; _ < 3; _++) {
-    accounts.push({
-      id: _,
-      service: `Service #${Math.floor(Math.random())}`,
-      key: `${btoa(Math.random())}`,
-    });
-  }
-
-  console.log(accounts);
-});
 
 /* Methods */
 function toggleConnectionStatus() {
@@ -41,6 +23,37 @@ function toggleConnectionStatus() {
 function downloadToDevice() {
   console.log("Downloading data to tinyTOTP device...");
 }
+function toggleDisplayKeyStatus() {
+  displayKeyStatus.value = !displayKeyStatus.value;
+}
+function keyDisplayString(account) {
+  if (!displayKeyStatus.value) {
+    return "*****";
+  } else {
+    return account.key;
+  }
+}
+function fakeTOTP(key) {
+  let code = Math.floor(Math.random() * 1000000);
+  return ("000000" + code + "0").slice(-7, -1);
+}
+
+/* Lifecycle Hooks */
+onMounted(() => {
+  console.log("Starting Application");
+
+  let timer = setInterval(() => {
+    totpSeed.value += 1;
+  }, 1000);
+
+  for (let _ = 0; _ < 3; _++) {
+    accounts.push({
+      id: _,
+      service: `Service #${_}`,
+      key: `${btoa(Math.random()).slice(-8, -1)}`,
+    });
+  }
+});
 </script>
 
 <template>
@@ -60,14 +73,19 @@ function downloadToDevice() {
     </div>
 
     <div class="card" v-for="a in accounts" :key="a.id">
-      <div class="card-header">Account</div>
+      <div class="card-header">{{ a.service }}</div>
       <hr />
       <div class="card-body">
         <div>
           Key:
-          <a href="#"> ***** </a>
+          <a href="#!" @click="toggleDisplayKeyStatus">
+            {{ keyDisplayString(a) }}
+          </a>
         </div>
-        <div>Code: *****</div>
+        <div>
+          Code:
+          {{ fakeTOTP(totpSeed) }}
+        </div>
       </div>
     </div>
   </div>
