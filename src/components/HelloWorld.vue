@@ -18,20 +18,6 @@ const testObj = ref(originalObj);
     <button type="button" @click="count++">count is {{ count }}</button>
     <p>testObj: {{ testObj }}</p>
   </div>
-
-  <table>
-    <th>
-      <tr>
-        3
-      </tr>
-      <tr>
-        34
-      </tr>
-      <tr>
-        34
-      </tr>
-    </th>
-  </table>
 </template>
 
 <style scoped>
