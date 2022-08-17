@@ -1,9 +1,9 @@
 <script setup>
 import { ref, computed, reactive, onMounted } from "vue";
+import Account from "@/others/Account.js";
 
 /* Data */
 const connectStatus = ref(false);
-const displayKeyStatus = ref(false);
 
 const accounts = reactive([]);
 const totpSeed = ref(0);
@@ -23,11 +23,8 @@ function toggleConnectionStatus() {
 function downloadToDevice() {
   console.log("Downloading data to tinyTOTP device...");
 }
-function toggleDisplayKeyStatus() {
-  displayKeyStatus.value = !displayKeyStatus.value;
-}
 function keyDisplayString(account) {
-  if (!displayKeyStatus.value) {
+  if (!account.showKey) {
     return "*****";
   } else {
     return account.key;
@@ -43,15 +40,18 @@ onMounted(() => {
   console.log("Starting Application");
 
   let timer = setInterval(() => {
-    totpSeed.value += 1;
-  }, 1000);
+    totpSeed.value += 5;
+  }, 5000);
 
   for (let _ = 0; _ < 3; _++) {
-    accounts.push({
-      id: _,
-      service: `Service #${_}`,
-      key: `${btoa(Math.random()).slice(-8, -1)}`,
-    });
+    accounts.push(
+      new Account(
+        _,
+        `Service #${_}`,
+        `${btoa(Math.random()).slice(-8, -1)}`,
+        false
+      )
+    );
   }
 });
 </script>
@@ -78,7 +78,7 @@ onMounted(() => {
       <div class="card-body">
         <div>
           Key:
-          <a href="#!" @click="toggleDisplayKeyStatus">
+          <a href="#!" @click="a.toggleShowKey()">
             {{ keyDisplayString(a) }}
           </a>
         </div>
