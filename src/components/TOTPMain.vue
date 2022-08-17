@@ -2,10 +2,13 @@
 import { ref, computed, reactive, onMounted } from "vue";
 import Account from "@/others/Account.js";
 
+const ACCOUNTS_NUM = 10;
 /* Data */
 const connectStatus = ref(false);
 
 const accounts = reactive([]);
+const page = ref(0);
+const entriesPerPage = ref(3);
 const totpSeed = ref(0);
 
 /* Computed */
@@ -15,6 +18,9 @@ const connectStatusString = computed(() =>
 const connectCmdString = computed(() =>
   connectStatus.value ? "Disconnect" : "Connect"
 );
+const pageCount = computed(() => {
+  return Math.floor(accounts.length / entriesPerPage.value);
+});
 
 /* Methods */
 function toggleConnectionStatus() {
@@ -22,6 +28,12 @@ function toggleConnectionStatus() {
 }
 function downloadToDevice() {
   console.log("Downloading data to tinyTOTP device...");
+}
+function pageAccounts(page) {
+  return this.accounts.slice(
+    page * entriesPerPage.value,
+    (page + 1) * entriesPerPage.value
+  );
 }
 function keyDisplayString(account) {
   if (!account.showKey) {
@@ -43,7 +55,8 @@ onMounted(() => {
     totpSeed.value += 5;
   }, 5000);
 
-  for (let _ = 0; _ < 3; _++) {
+  // Create some dummy accounts
+  for (let _ = 0; _ < ACCOUNTS_NUM; _++) {
     accounts.push(
       new Account(
         _,
@@ -70,9 +83,15 @@ onMounted(() => {
         {{ connectCmdString }}
       </button>
       <button @click="downloadToDevice">Download</button>
+      <div>
+        <button @click="page = page === 0 ? 0 : page - 1">Previous Page</button>
+        <button @click="page = page >= pageCount ? pageCount : page + 1">
+          Next Page ({{ page + 1 }} of {{ pageCount + 1 }})
+        </button>
+      </div>
     </div>
 
-    <div class="card" v-for="a in accounts" :key="a.id">
+    <div class="card" v-for="a in pageAccounts(page)" :key="a.id">
       <div class="card-header">{{ a.service }}</div>
       <hr />
       <div class="card-body">
@@ -97,7 +116,7 @@ onMounted(() => {
 }
 
 button {
-  margin: 0 10px;
+  margin: 4px 10px;
 }
 
 hr {
