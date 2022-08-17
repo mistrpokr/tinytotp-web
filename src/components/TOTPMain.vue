@@ -1,12 +1,12 @@
 <script setup>
 import { ref, computed, reactive, onMounted } from "vue";
-import Account from "@/others/Account.js";
+import Account from "@/others/Account";
 
 const ACCOUNTS_NUM = 10;
 /* Data */
 const connectStatus = ref(false);
 
-const accounts = reactive([]);
+const accounts = reactive({ value: [] });
 const page = ref(0);
 const entriesPerPage = ref(3);
 const totpSeed = ref(0);
@@ -19,7 +19,7 @@ const connectCmdString = computed(() =>
   connectStatus.value ? "Disconnect" : "Connect"
 );
 const pageCount = computed(() => {
-  return Math.floor(accounts.length / entriesPerPage.value);
+  return Math.floor(accounts.value.length / entriesPerPage.value);
 });
 
 /* Methods */
@@ -30,7 +30,7 @@ function downloadToDevice() {
   console.log("Downloading data to tinyTOTP device...");
 }
 function pageAccounts(page) {
-  return this.accounts.slice(
+  return accounts.value.slice(
     page * entriesPerPage.value,
     (page + 1) * entriesPerPage.value
   );
@@ -57,7 +57,7 @@ onMounted(() => {
 
   // Create some dummy accounts
   for (let _ = 0; _ < ACCOUNTS_NUM; _++) {
-    accounts.push(
+    accounts.value.push(
       new Account(
         _,
         `Service #${_}`,
