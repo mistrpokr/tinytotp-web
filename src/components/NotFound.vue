@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <h1>404 NOT FOUND</h1>
+  <div class="q-mx-lg">
+    <h5>404 NOT FOUND</h5>
   </div>
 </template>
 
