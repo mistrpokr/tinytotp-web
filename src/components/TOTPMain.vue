@@ -10,16 +10,20 @@ const accounts = reactive({ value: [] });
 const page = ref(0);
 const entriesPerPage = ref(3);
 const totpSeed = ref(0);
+const totpSecondsLeft = ref(0);
 
 /* Computed */
 const connectStatusString = computed(() =>
   connectStatus.value ? "Disconnected" : "Connected"
 );
 const connectCmdString = computed(() =>
-  connectStatus.value ? "Disconnect" : "Connect"
+  connectStatus.value ? "Connect" : "Disconnect"
 );
 const pageCount = computed(() => {
   return Math.floor(accounts.value.length / entriesPerPage.value);
+});
+const totpStepProgress = computed(() => {
+  return totpSecondsLeft.value / 30;
 });
 
 /* Methods */
@@ -37,7 +41,7 @@ function pageAccounts(page) {
 }
 function keyDisplayString(account) {
   if (!account.showKey) {
-    return "*****";
+    return "Hidden";
   } else {
     return account.key;
   }
@@ -51,10 +55,6 @@ function fakeTOTP(key) {
 onMounted(() => {
   console.log("Starting Application");
 
-  let timer = setInterval(() => {
-    totpSeed.value += 5;
-  }, 5000);
-
   // Create some dummy accounts
   for (let _ = 0; _ < ACCOUNTS_NUM; _++) {
     accounts.value.push(
@@ -66,72 +66,79 @@ onMounted(() => {
       )
     );
   }
+
+  // Start timer
+  let timer = setInterval(() => {
+    totpSeed.value += 1;
+    totpSecondsLeft.value = Math.floor(Date.now() / 1000) % 30;
+    // console.log(totpSecondsLeft.value);
+  }, 1000);
 });
 </script>
 
 <template>
-  <div>
-    <h1>tinyTOTP</h1>
-
-    <div class="card">
-      <h3>
-        Device status:
-        <b>{{ connectStatusString }}</b>
-      </h3>
-
-      <button @click="toggleConnectionStatus">
-        {{ connectCmdString }}
-      </button>
-      <button @click="downloadToDevice">Download</button>
-      <div>
-        <button @click="page = page === 0 ? 0 : page - 1">Previous Page</button>
-        <button @click="page = page >= pageCount ? pageCount : page + 1">
-          Next Page ({{ page + 1 }} of {{ pageCount + 1 }})
-        </button>
-      </div>
+  <div class="q-ma-md">
+    <!-- Device Interactions -->
+    <div class="row q-my-xs">
+      <q-card bordered class="fit">
+        <q-card-section>
+          <h6>Overview</h6>
+          <b>Status: {{ connectStatusString }}</b>
+        </q-card-section>
+        <q-separator></q-separator>
+        <q-card-section>
+          <div class="q-gutter-sm">
+            <q-btn color="primary" @click="toggleConnectionStatus">
+              {{ connectCmdString }}
+            </q-btn>
+            <q-btn color="secondary" @click="downloadToDevice">Download</q-btn>
+          </div>
+        </q-card-section>
+      </q-card>
     </div>
+    <div class="row">
+      <q-linear-progress
+        :value="totpStepProgress"
+        :animation-speed="0"
+        class="q-mt-md"
+      />
+    </div>
+    <!-- TOTP Service Cards -->
+    <div class="row q-my-xs q-col-gutter-x-md q-col-gutter-y-lg">
+      <div class="col-6" v-for="a in pageAccounts(page)" :key="a.id">
+        <q-card bordered class="fit card-wrapped">
+          <q-card-section>
+            <div class="text-h6">{{ a.service }}</div>
+            <!-- <div class="text-subtitle2">by John Doe</div> -->
+          </q-card-section>
 
-    <div class="card" v-for="a in pageAccounts(page)" :key="a.id">
-      <div class="card-header">{{ a.service }}</div>
-      <hr />
-      <div class="card-body">
-        <div>
-          Key:
-          <a href="#!" @click="a.toggleShowKey()">
-            {{ keyDisplayString(a) }}
-          </a>
-        </div>
-        <div>
-          Code:
-          {{ fakeTOTP(totpSeed) }}
-        </div>
+          <q-separator inset />
+
+          <q-card-section>
+            <div>
+              Key:
+              <a href="#!" @click="a.toggleShowKey()">
+                {{ keyDisplayString(a) }}
+              </a>
+            </div>
+            <div>
+              Code:
+              {{ fakeTOTP(totpSeed) }}
+            </div>
+          </q-card-section>
+        </q-card>
       </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-* {
-  color: bisque;
-}
-
-button {
-  margin: 4px 10px;
-}
-
-hr {
-  border-top: 3px solid #bbb;
-  border-radius: 5px;
-  // width: 120%;
-}
-.card {
-  background-color: darkslategray;
-  border-radius: 10px;
-  margin: 20px 0;
-}
-
-.card-header {
-  font-weight: bolder;
-  font-size: larger;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
 }
 </style>
