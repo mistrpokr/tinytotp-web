@@ -1,8 +1,24 @@
 <script setup>
+/*
+ * The majority of WebSerial code are taken from this detailed tutorial:
+ * https://web.dev/serial/
+ *
+ */
+
 import { ref, computed, reactive, onMounted } from "vue";
 import Account from "@/others/Account";
 
 const ACCOUNTS_NUM = 10;
+let port = undefined;
+let reader,
+  writer,
+  textDecoder,
+  textEncoder,
+  readableStreamClosed,
+  writableStreamClosed;
+let portPromise;
+let keepReading = false;
+
 /* Data */
 const connectStatus = ref(false);
 
@@ -14,10 +30,10 @@ const totpSecondsLeft = ref(0);
 
 /* Computed */
 const connectStatusString = computed(() =>
-  connectStatus.value ? "Disconnected" : "Connected"
+  connectStatus.value ? "Connected" : "Disconnected"
 );
 const connectCmdString = computed(() =>
-  connectStatus.value ? "Connect" : "Disconnect"
+  connectStatus.value ? "Disconnect" : "Connect"
 );
 const pageCount = computed(() => {
   return Math.floor(accounts.value.length / entriesPerPage.value);
@@ -27,11 +43,72 @@ const totpStepProgress = computed(() => {
 });
 
 /* Methods */
-function toggleConnectionStatus() {
+function editConnection() {
+  if (connectStatus.value == false) {
+    /* Connect */
+    portPromise = connectAndListen();
+  } else {
+    /* Disconnect */
+    disconnect();
+  }
   connectStatus.value = !connectStatus.value;
 }
-function downloadToDevice() {
+
+async function connectAndListen() {
+  port = await navigator.serial.requestPort();
+  await port.open({ baudRate: 115200 });
+
+  textDecoder = new TextDecoderStream();
+  readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+
+  reader = textDecoder.readable.getReader();
+
+  keepReading = true;
+  while (port.readable && keepReading) {
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+          // reader.cancel() has been called.
+          break;
+        }
+        // value is a Uint8Array.
+        console.log(value);
+      }
+    } catch (error) {
+      // Handle error...
+    } finally {
+      // Allow the serial port to be closed later.
+      console.log("Releasing lock");
+      reader.releaseLock();
+    }
+  }
+}
+
+async function disconnect() {
+  console.log("Stop reading...");
+  keepReading = false;
+
+  reader.cancel();
+  await readableStreamClosed.catch(() => {
+    /* Error */
+  });
+  writer.close();
+  await writableStreamClosed;
+
+  await port.close();
+}
+
+async function downloadToDevice() {
   console.log("Downloading data to tinyTOTP device...");
+
+  textEncoder = new TextEncoderStream();
+  writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+
+  writer = textEncoder.writable.getWriter();
+
+  await writer.write("key=134\n");
+  await writer.write("time=1\n");
 }
 function pageAccounts(page) {
   return accounts.value.slice(
@@ -88,7 +165,7 @@ onMounted(() => {
         <q-separator></q-separator>
         <q-card-section>
           <div class="q-gutter-sm">
-            <q-btn color="primary" @click="toggleConnectionStatus">
+            <q-btn color="primary" @click="editConnection">
               {{ connectCmdString }}
             </q-btn>
             <q-btn color="secondary" @click="downloadToDevice">Download</q-btn>
