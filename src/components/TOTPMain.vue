@@ -107,8 +107,11 @@ async function downloadToDevice() {
 
   writer = textEncoder.writable.getWriter();
 
-  await writer.write("key=134\n");
-  await writer.write("time=1\n");
+  let payload = `?time=${Math.floor(
+    Date.now() / 1000
+  )}&service=GitHub,hello&service=Weibo,1234;\n`;
+
+  await writer.write(payload);
 }
 function pageAccounts(page) {
   return accounts.value.slice(
