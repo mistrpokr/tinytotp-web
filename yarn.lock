@@ -356,6 +356,11 @@ is-number@^7.0.0:
   resolved "https://registry.npmmirror.com/is-number/-/is-number-7.0.0.tgz#7535345b896734d5f80c4d06c50955527a14f12b"
   integrity sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==
 
+jssha@~3.2.0:
+  version "3.2.0"
+  resolved "https://registry.npmmirror.com/jssha/-/jssha-3.2.0.tgz#88ec50b866dd1411deaddbe6b3e3692e4c710f16"
+  integrity sha512-QuruyBENDWdN4tZwJbQq7/eAK85FqrI4oDbXjy5IBhYD+2pTJyBUWZe8ctWaCkrV0gy6AaelgOZZBMeswEa/6Q==
+
 magic-string@^0.25.7:
   version "0.25.9"
   resolved "https://registry.npmmirror.com/magic-string/-/magic-string-0.25.9.tgz#de7f9faf91ef8a1c91d02c2e5314c8277dbcdd1c"
@@ -372,6 +377,13 @@ normalize-path@^3.0.0, normalize-path@~3.0.0:
   version "3.0.0"
   resolved "https://registry.npmmirror.com/normalize-path/-/normalize-path-3.0.0.tgz#0dcd69ff23a1c9b11fd0978316644a0388216a65"
   integrity sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==
+
+otpauth@^8.0.2:
+  version "8.0.2"
+  resolved "https://registry.npmmirror.com/otpauth/-/otpauth-8.0.2.tgz#675e28a960543ff281cdcbe3ab39089940a125a3"
+  integrity sha512-Hj5IvDdhte1dmjBkWZ3K8DfQVt4LQycd4mtRVyRTWtYiXuqaDSF4+d7UDPqZO/JRWXDktEmDHqymA+hHj9NEqQ==
+  dependencies:
+    jssha "~3.2.0"
 
 path-parse@^1.0.7:
   version "1.0.7"
