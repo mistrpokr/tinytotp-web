@@ -1,7 +1,7 @@
-# Vue 3 + Vite
+# Web Client for tinyTOTP
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## Overview
+This project serves as a client for tinyTOTP, a STM32-based TOTP token project. 
 
-## Recommended IDE Setup
+The browser-based client utilizes the WebSerial API, and currently only works on Chromium-based browsers including Chrome, Chromium, Edge, and Opera. 
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
