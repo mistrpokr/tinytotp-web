@@ -24,7 +24,7 @@ const connectStatus = ref(false);
 
 const accounts = reactive({ value: [] });
 const page = ref(0);
-const entriesPerPage = ref(3);
+const entriesPerPage = ref(10);
 const totpSeed = ref(0);
 const totpSecondsLeft = ref(0);
 
@@ -46,17 +46,18 @@ const totpStepProgress = computed(() => {
 function editConnection() {
   if (connectStatus.value == false) {
     /* Connect */
-    portPromise = connectAndListen();
+    portPromise = serialConnect();
+    serialRead();
   } else {
     /* Disconnect */
-    disconnect();
+    serialDisconnect();
   }
-  connectStatus.value = !connectStatus.value;
 }
 
-async function connectAndListen() {
+async function serialConnect() {
   port = await navigator.serial.requestPort();
   await port.open({ baudRate: 115200 });
+  connectStatus.value = !connectStatus.value;
 
   textDecoder = new TextDecoderStream();
   readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
@@ -65,7 +66,24 @@ async function connectAndListen() {
   textEncoder = new TextEncoderStream();
   writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
   writer = textEncoder.writable.getWriter();
+}
 
+async function serialDisconnect() {
+  console.log("Stop reading...");
+  keepReading = false;
+
+  reader.cancel();
+  await readableStreamClosed.catch(() => {
+    /* Error */
+  });
+  writer.close();
+  await writableStreamClosed;
+
+  await port.close();
+  connectStatus.value = !connectStatus.value;
+}
+
+async function serialRead() {
   keepReading = true;
   while (port.readable && keepReading) {
     try {
@@ -88,21 +106,7 @@ async function connectAndListen() {
   }
 }
 
-async function disconnect() {
-  console.log("Stop reading...");
-  keepReading = false;
-
-  reader.cancel();
-  await readableStreamClosed.catch(() => {
-    /* Error */
-  });
-  writer.close();
-  await writableStreamClosed;
-
-  await port.close();
-}
-
-async function downloadToDevice() {
+async function serialWrite() {
   let payload = generateConfig(accounts.value);
   await writer.write(payload);
 }
@@ -113,7 +117,9 @@ function generateConfig(accountList) {
 
   for (let i = 0; i < accountList.length; i++) {
     const account = accountList[i];
-    conf += `&service=${account.service},${account.key}`;
+    conf += `&service=${account.service},${account.key.hex}`;
+
+    console.log(account.token);
   }
 
   conf += ";\n";
@@ -144,14 +150,7 @@ onMounted(() => {
 
   // Create some dummy accounts
   for (let _ = 0; _ < ACCOUNTS_NUM; _++) {
-    accounts.value.push(
-      new Account(
-        _,
-        `Service #${_}`,
-        `${btoa(Math.random()).slice(-8, -1)}`,
-        false
-      )
-    );
+    accounts.value.push(new Account(_, `Service#${_}`, false));
   }
 
   // Start timer
@@ -178,7 +177,12 @@ onMounted(() => {
             <q-btn color="primary" @click="editConnection">
               {{ connectCmdString }}
             </q-btn>
-            <q-btn color="secondary" @click="downloadToDevice">Download</q-btn>
+            <q-btn
+              color="secondary"
+              :disabled="!connectStatus"
+              @click="serialWrite"
+              >Download</q-btn
+            >
           </div>
         </q-card-section>
       </q-card>
