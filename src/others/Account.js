@@ -1,9 +1,15 @@
+import * as OTPAuth from "otpauth";
 class Account {
-  constructor(id, service, key, showKey = false) {
+  constructor(id, service, showKey = false) {
     this.id = id;
     this.service = service;
-    this.key = key;
+    this.key = new OTPAuth.Secret();
     this.showKey = showKey;
+
+    this.totp = new OTPAuth.TOTP({
+      label: service,
+      secret: this.key,
+    });
 
     // console.log(this.id, this.service, this.key, this.showKey);
   }
@@ -18,6 +24,10 @@ class Account {
 
   toggleShowKey() {
     this.showKey = !this.showKey;
+  }
+
+  get token() {
+    return this.totp.generate();
   }
 }
 
