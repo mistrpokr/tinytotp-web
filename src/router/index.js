@@ -10,11 +10,6 @@ const router = createRouter({
       component: () => import("@/components/TOTPMain.vue"),
     },
     {
-      path: "/quasar",
-      name: "QuasarTest",
-      component: () => import("@/components/QuasarTest.vue"),
-    },
-    {
       path: "/:pathMatch(.*)*",
       name: "NotFound",
       component: () => import("@/components/NotFound.vue"),
