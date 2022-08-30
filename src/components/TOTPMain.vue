@@ -60,8 +60,11 @@ async function connectAndListen() {
 
   textDecoder = new TextDecoderStream();
   readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-
   reader = textDecoder.readable.getReader();
+
+  textEncoder = new TextEncoderStream();
+  writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+  writer = textEncoder.writable.getWriter();
 
   keepReading = true;
   while (port.readable && keepReading) {
@@ -100,19 +103,23 @@ async function disconnect() {
 }
 
 async function downloadToDevice() {
-  console.log("Downloading data to tinyTOTP device...");
-
-  textEncoder = new TextEncoderStream();
-  writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
-
-  writer = textEncoder.writable.getWriter();
-
-  let payload = `?time=${Math.floor(
-    Date.now() / 1000
-  )}&service=GitHub,hello&service=Weibo,1234;\n`;
-
+  let payload = generateConfig(accounts.value);
   await writer.write(payload);
 }
+
+function generateConfig(accountList) {
+  let epoch = Math.floor(Date.now() / 1000);
+  let conf = `?time=${epoch}`;
+
+  for (let i = 0; i < accountList.length; i++) {
+    const account = accountList[i];
+    conf += `&service=${account.service},${account.key}`;
+  }
+
+  conf += ";\n";
+  return conf;
+}
+
 function pageAccounts(page) {
   return accounts.value.slice(
     page * entriesPerPage.value,
