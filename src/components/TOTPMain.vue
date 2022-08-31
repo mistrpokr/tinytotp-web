@@ -43,14 +43,14 @@ const totpStepProgress = computed(() => {
 });
 
 /* Methods */
-function editConnection() {
+async function editConnection() {
   if (connectStatus.value == false) {
     /* Connect */
-    portPromise = serialConnect();
-    serialRead();
+    await serialConnect();
+    await serialRead();
   } else {
     /* Disconnect */
-    serialDisconnect();
+    await serialDisconnect();
   }
 }
 
